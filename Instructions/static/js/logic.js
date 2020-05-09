@@ -1,5 +1,5 @@
 // store the json URL as variable jsonUrl
-jsonUrl = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_week.geojson"
+jsonUrl = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_day.geojson"
 
 // request data from URL using d3.json
 d3.json(jsonUrl, function(data) {
@@ -7,19 +7,49 @@ d3.json(jsonUrl, function(data) {
     createFeatures(data.features);
 });
 
-function createFeatures(earthquakeData) {
+// function to change marker size depending on magnitude
+function markerSize(magnitude) {
+    return magnitude * 25000;
+};
 
-    // define a function to run fo reach feature in features array
-    // give each feature a popup describing the time and place of earthquake
-    function onEachFeature(feature, layer) {
-        layer.bindPopup("<h3>" + feature.properties.place +
-        "</h3><hr><p>" + new Date(feature.properties.time) + "</p>");
-    }
+// function to assign colors depending on mag value
+function getColor(mag) {
+    return mag > 5 ? '#ff0000':
+        mag > 4 ? '#ff8000':
+        mag > 3 ? '#ffbf00':
+        mag > 2 ? '#ffff00':
+        mag > 1 ? '#bfff00':
+        '#00ff40';   
+}
+
+
+function createFeatures(earthquakeData) {
+// lines 28-33 for map markers to test map is functioning properly and are commented out. 
+// lines 36-53 for circles to scale based on magnitude
+    // // define a function to run fo reach feature in features array
+    // // give each feature a popup describing the time and place of earthquake
+    // function onEachFeature(feature, layer) {
+    //     layer.bindPopup("<h3>" + feature.properties.place +
+    //     "</h3><hr><p>" + new Date(feature.properties.time) + "</p>");
+    // }
 
     // create a geoJSON layer containing the features array on the earthquakeData object
     // run the onEachFeature function once for each piece of data in the array
     var earthquakes = L.geoJSON(earthquakeData, {
-        onEachFeature: onEachFeature
+        // give each feature a popup describing the place and time of the earthquake
+        onEachFeature: function(feature, layer) {
+            layer.bindPopup("<h3>" + "Magnitude: " + feature.properties.mag + "</h3><hr><h4>" + feature.properties.place + "</h4><hr><p>" + new Date(feature.properties.time) + "</p>");
+        },
+        // create markers depending on magnitudes
+        pointToLayer: function(feature, latlng) {
+            return new L.circle(latlng, {
+                radius: markerSize(feature.properties.mag),
+                fillColor: getColor(feature.properties.mag),
+                fillOpacity: 0.5,
+                color: 'red',
+                weight: 0.5
+            })
+        }
     });
 
     // send earthquakes layer to createMap function
